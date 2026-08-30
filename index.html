@@ -1,0 +1,4116 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+
+<meta charset="UTF-8">
+
+<meta
+  name="viewport"
+  content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
+>
+
+<meta name="theme-color" content="#061f17">
+
+<title>Solitaire</title>
+
+<style>
+
+/* =========================================================
+   RESET
+========================================================= */
+
+* {
+  box-sizing: border-box;
+  -webkit-tap-highlight-color: transparent;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+  min-height: 100%;
+}
+
+body {
+  background:
+    radial-gradient(
+      circle at 50% 0%,
+      #0b3025 0%,
+      #061f17 72%
+    );
+
+  color: white;
+
+  font-family:
+    -apple-system,
+    BlinkMacSystemFont,
+    "Segoe UI",
+    Arial,
+    sans-serif;
+
+  overflow-x: hidden;
+}
+
+button {
+  font: inherit;
+}
+
+
+/* =========================================================
+   APP
+========================================================= */
+
+.app {
+  width: 100%;
+  max-width: 1100px;
+  margin: auto;
+  padding: 12px;
+}
+
+
+/* =========================================================
+   HEADER
+========================================================= */
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.logo {
+  font-size: 26px;
+  font-weight: 900;
+  letter-spacing: 1px;
+}
+
+.logo span {
+  color: #d8b75c;
+}
+
+.stats {
+  display: flex;
+  gap: 18px;
+}
+
+.stat {
+  text-align: center;
+  font-size: 11px;
+  color: rgba(255,255,255,.7);
+}
+
+.stat strong {
+  display: block;
+  color: #d8b75c;
+  font-size: 17px;
+}
+
+
+/* =========================================================
+   MODE BUTTONS
+========================================================= */
+
+.modes {
+  display: flex;
+  gap: 7px;
+  margin-bottom: 10px;
+}
+
+.mode-btn {
+  border: 0;
+  border-radius: 11px;
+  min-height: 42px;
+  padding: 9px 18px;
+  background: #103b2f;
+  color: white;
+  font-weight: 800;
+}
+
+.mode-btn.active {
+  background: #d8b75c;
+  color: #171717;
+}
+
+
+/* =========================================================
+   MAIN BOARD
+========================================================= */
+
+.board {
+  width: 100%;
+  min-height: 690px;
+  padding: 13px;
+  border-radius: 20px;
+
+  background:
+    radial-gradient(
+      circle at 50% 25%,
+      #087452 0%,
+      #076044 52%,
+      #054b36 100%
+    );
+
+  box-shadow:
+    inset 0 0 0 2px rgba(255,255,255,.05),
+    0 18px 45px rgba(0,0,0,.3);
+}
+
+
+/* =========================================================
+   TOOLBAR
+========================================================= */
+
+.toolbar {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 12px;
+}
+
+.toolbar button {
+  border: 0;
+  border-radius: 9px;
+  min-height: 40px;
+  padding: 8px 11px;
+  color: white;
+  font-weight: 800;
+}
+
+.toolbar button:active {
+  transform: scale(.96);
+}
+
+.toolbar button:disabled {
+  opacity: .4;
+}
+
+.undo-button {
+  background: #315276;
+}
+
+.draw-toggle,
+.hint-button {
+  background: #165d4b;
+}
+
+.new-game {
+  background: rgba(255,255,255,.13);
+}
+
+
+/* =========================================================
+   STANDARD CARD
+========================================================= */
+
+.card {
+  position: relative;
+
+  width: 76px;
+  height: 108px;
+
+  padding: 7px;
+
+  border: 1px solid #d7d2c8;
+  border-radius: 10px;
+
+  background: #fffdf7;
+  color: #151515;
+
+  box-shadow:
+    0 4px 8px rgba(0,0,0,.28);
+
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+
+  text-align: left;
+
+  user-select: none;
+  touch-action: manipulation;
+
+  cursor: pointer;
+
+  transition:
+    transform .12s ease,
+    box-shadow .12s ease;
+}
+
+.card.red {
+  color: #c6283d;
+}
+
+.card.selected {
+  outline: 3px solid #d8b75c;
+  transform: translateY(-5px);
+  box-shadow:
+    0 8px 15px rgba(0,0,0,.35);
+}
+
+.card.hint-card {
+  outline: 4px solid #65e6ff;
+
+  box-shadow:
+    0 0 0 5px rgba(101,230,255,.2),
+    0 0 25px rgba(101,230,255,.65);
+
+  animation: hintPulse 1s infinite;
+}
+
+@keyframes hintPulse {
+
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+
+  50% {
+    transform: translateY(-5px);
+  }
+
+}
+
+.rank {
+  font-size: 16px;
+  line-height: 1;
+  font-weight: 900;
+}
+
+.center-suit {
+  position: absolute;
+
+  left: 50%;
+  top: 50%;
+
+  transform:
+    translate(-50%, -50%);
+
+  font-size: 29px;
+}
+
+
+/* =========================================================
+   CARD BACK
+========================================================= */
+
+.card.back {
+  border: 3px solid #e9edf8;
+
+  background:
+    repeating-linear-gradient(
+      45deg,
+      #28488f 0px,
+      #28488f 6px,
+      #3559a4 6px,
+      #3559a4 12px
+    );
+}
+
+
+/* =========================================================
+   EMPTY SLOT
+========================================================= */
+
+.slot {
+  width: 76px;
+  height: 108px;
+
+  border: 2px dashed rgba(255,255,255,.25);
+
+  border-radius: 10px;
+
+  display: flex;
+  justify-content: center;
+  align-items: center;
+
+  color: rgba(255,255,255,.4);
+
+  font-weight: 800;
+
+  cursor: pointer;
+}
+
+
+/* =========================================================
+   KLONDIKE
+========================================================= */
+
+.klondike-top {
+  display: grid;
+
+  grid-template-columns:
+    repeat(7, 76px);
+
+  gap: 9px;
+
+  margin-bottom: 18px;
+}
+
+.tableau {
+  display: grid;
+
+  grid-template-columns:
+    repeat(7, minmax(0,1fr));
+
+  gap: 7px;
+}
+
+.tableau-column {
+  position: relative;
+  min-height: 470px;
+}
+
+.tableau-card {
+  position: relative;
+  margin-bottom: -67px;
+}
+
+.tableau-card:last-child {
+  z-index: 100;
+}
+
+.waste-slot {
+  width: 76px;
+  height: 108px;
+
+  position: relative;
+
+  border: 2px dashed rgba(255,255,255,.25);
+
+  border-radius: 10px;
+}
+
+.waste-card {
+  position: absolute;
+  left: 0;
+  top: 0;
+}
+
+
+/* =========================================================
+   =========================================================
+   TRIPEAKS
+   =========================================================
+========================================================= */
+
+.tripeaks-wrap {
+  width: 100%;
+
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+
+/*
+   IMPORTANT:
+
+   TriPeaks gets its OWN sizing.
+
+   We are NOT using the Klondike .card dimensions
+   for positioning anymore.
+*/
+
+.tripeaks-board {
+
+  position: relative;
+
+  width: min(
+    620px,
+    100%
+  );
+
+  /*
+     This gives us enough vertical space
+     for the four rows.
+  */
+
+  height: 410px;
+
+  margin: 0 auto;
+
+  /*
+     CSS variables control the entire layout.
+  */
+
+  --tri-card-width: 58px;
+
+  --tri-card-height: 82px;
+
+  --tri-step: 51px;
+
+  --tri-row-gap: 72px;
+}
+
+
+/* =========================================================
+   TRIPEAKS CARD
+========================================================= */
+
+.tri-card {
+
+  position: absolute;
+
+  width: var(--tri-card-width) !important;
+
+  height: var(--tri-card-height) !important;
+
+  min-width: var(--tri-card-width);
+
+  min-height: var(--tri-card-height);
+
+  padding: 6px !important;
+
+  z-index: 10;
+
+  margin: 0 !important;
+
+  overflow: hidden;
+}
+
+
+/* =========================================================
+   TRIPEAKS CARD TEXT
+========================================================= */
+
+.tri-card .rank {
+  font-size: 14px;
+}
+
+.tri-card .center-suit {
+  font-size: 24px;
+}
+
+
+/* =========================================================
+   TRIPEAKS — BOTTOM ROW
+========================================================= */
+
+/*
+   10 cards.
+
+   Slight overlap is intentional,
+   but each card still leaves enough
+   of the next card visible.
+*/
+
+.tri-r4-0 {
+  left: 0;
+  top: 285px;
+}
+
+.tri-r4-1 {
+  left: var(--tri-step);
+  top: 285px;
+}
+
+.tri-r4-2 {
+  left: calc(var(--tri-step) * 2);
+  top: 285px;
+}
+
+.tri-r4-3 {
+  left: calc(var(--tri-step) * 3);
+  top: 285px;
+}
+
+.tri-r4-4 {
+  left: calc(var(--tri-step) * 4);
+  top: 285px;
+}
+
+.tri-r4-5 {
+  left: calc(var(--tri-step) * 5);
+  top: 285px;
+}
+
+.tri-r4-6 {
+  left: calc(var(--tri-step) * 6);
+  top: 285px;
+}
+
+.tri-r4-7 {
+  left: calc(var(--tri-step) * 7);
+  top: 285px;
+}
+
+.tri-r4-8 {
+  left: calc(var(--tri-step) * 8);
+  top: 285px;
+}
+
+.tri-r4-9 {
+  left: calc(var(--tri-step) * 9);
+  top: 285px;
+}
+
+
+/* =========================================================
+   TRIPEAKS — ROW 3
+========================================================= */
+
+.tri-r3-0 {
+  left: calc(var(--tri-step) * .5);
+  top: 213px;
+}
+
+.tri-r3-1 {
+  left: calc(var(--tri-step) * 1.5);
+  top: 213px;
+}
+
+.tri-r3-2 {
+  left: calc(var(--tri-step) * 2.5);
+  top: 213px;
+}
+
+.tri-r3-3 {
+  left: calc(var(--tri-step) * 3.5);
+  top: 213px;
+}
+
+.tri-r3-4 {
+  left: calc(var(--tri-step) * 4.5);
+  top: 213px;
+}
+
+.tri-r3-5 {
+  left: calc(var(--tri-step) * 5.5);
+  top: 213px;
+}
+
+.tri-r3-6 {
+  left: calc(var(--tri-step) * 6.5);
+  top: 213px;
+}
+
+.tri-r3-7 {
+  left: calc(var(--tri-step) * 7.5);
+  top: 213px;
+}
+
+.tri-r3-8 {
+  left: calc(var(--tri-step) * 8.5);
+  top: 213px;
+}
+
+
+/* =========================================================
+   TRIPEAKS — ROW 2
+========================================================= */
+
+.tri-r2-0 {
+  left: calc(var(--tri-step) * 1);
+  top: 141px;
+}
+
+.tri-r2-1 {
+  left: calc(var(--tri-step) * 2);
+  top: 141px;
+}
+
+.tri-r2-2 {
+  left: calc(var(--tri-step) * 3.5);
+  top: 141px;
+}
+
+.tri-r2-3 {
+  left: calc(var(--tri-step) * 4.5);
+  top: 141px;
+}
+
+.tri-r2-4 {
+  left: calc(var(--tri-step) * 6);
+  top: 141px;
+}
+
+.tri-r2-5 {
+  left: calc(var(--tri-step) * 7);
+  top: 141px;
+}
+
+
+/* =========================================================
+   TRIPEAKS — TOP THREE PEAKS
+========================================================= */
+
+.tri-r1-0 {
+  left: calc(var(--tri-step) * 1.5);
+  top: 69px;
+}
+
+.tri-r1-1 {
+  left: calc(var(--tri-step) * 4);
+  top: 69px;
+}
+
+.tri-r1-2 {
+  left: calc(var(--tri-step) * 6.5);
+  top: 69px;
+}
+
+
+/* =========================================================
+   BLOCKED CARD
+========================================================= */
+
+.tri-card.blocked {
+  pointer-events: none;
+}
+
+
+/* =========================================================
+   TRIPEAKS PILES
+========================================================= */
+
+.tri-piles {
+
+  display: flex;
+
+  justify-content: center;
+
+  align-items: center;
+
+  gap: 18px;
+
+  margin-top: 4px;
+
+  min-height: 90px;
+}
+
+.tri-pile {
+
+  width:
+    var(--tri-card-width, 58px);
+
+  height:
+    var(--tri-card-height, 82px);
+
+  position: relative;
+}
+
+.tri-pile .card {
+
+  width:
+    58px;
+
+  height:
+    82px;
+
+  padding:
+    6px;
+}
+
+.tri-pile .rank {
+  font-size:
+    14px;
+}
+
+.tri-pile .center-suit {
+  font-size:
+    24px;
+}
+
+
+/* =========================================================
+   MESSAGE
+========================================================= */
+
+.message {
+  min-height: 45px;
+
+  margin-top: 10px;
+
+  text-align: center;
+
+  font-size: 13px;
+
+  color: rgba(255,255,255,.88);
+}
+
+
+/* =========================================================
+   MOBILE TRIPEAKS
+========================================================= */
+
+@media (max-width: 700px) {
+
+  .app {
+    padding: 7px;
+  }
+
+  .board {
+    padding: 9px;
+    min-height: 650px;
+  }
+
+  .logo {
+    font-size: 22px;
+  }
+
+  .stats {
+    gap: 12px;
+  }
+
+  .stat strong {
+    font-size: 15px;
+  }
+
+  .toolbar {
+    gap: 4px;
+  }
+
+  .toolbar button {
+    min-height: 37px;
+    padding: 7px 8px;
+    font-size: 11px;
+  }
+
+
+  /* -------------------------------------------------------
+     KLONDIKE STAYS BIG
+  ------------------------------------------------------- */
+
+  .card,
+  .slot,
+  .waste-slot {
+
+    width:
+      52px;
+
+    height:
+      76px;
+  }
+
+  .rank {
+    font-size:
+      12px;
+  }
+
+  .center-suit {
+    font-size:
+      21px;
+  }
+
+  .klondike-top {
+
+    grid-template-columns:
+      repeat(7, 52px);
+
+    gap:
+      3px;
+  }
+
+  .tableau {
+    gap:
+      3px;
+  }
+
+  .tableau-column {
+    min-height:
+      360px;
+  }
+
+  .tableau-card {
+    margin-bottom:
+      -48px;
+  }
+
+
+  /* -------------------------------------------------------
+     TRIPEAKS MOBILE
+
+     The ENTIRE layout scales together.
+
+     Card width and horizontal step remain
+     proportional so cards don't pile on top
+     of each other.
+  ------------------------------------------------------- */
+
+  .tripeaks-board {
+
+    --tri-card-width:
+      46px;
+
+    --tri-card-height:
+      66px;
+
+    --tri-step:
+      39px;
+
+    width:
+      390px;
+
+    max-width:
+      100%;
+
+    height:
+      335px;
+
+    transform:
+      scale(
+        min(
+          1,
+          calc(
+            (100vw - 28px) / 390
+          )
+        )
+      );
+
+    transform-origin:
+      top center;
+
+    margin-bottom:
+      -12px;
+  }
+
+
+  .tri-card {
+    width:
+      var(--tri-card-width) !important;
+
+    height:
+      var(--tri-card-height) !important;
+  }
+
+
+  .tri-card .rank {
+    font-size:
+      12px;
+  }
+
+
+  .tri-card .center-suit {
+    font-size:
+      20px;
+  }
+
+
+  .tri-piles {
+
+    margin-top:
+      0;
+
+    gap:
+      14px;
+  }
+
+
+  .tri-pile {
+
+    width:
+      46px;
+
+    height:
+      66px;
+  }
+
+
+  .tri-pile .card {
+
+    width:
+      46px;
+
+    height:
+      66px;
+  }
+
+}
+
+
+/* =========================================================
+   VERY SMALL PHONES
+========================================================= */
+
+@media (max-width: 360px) {
+
+  .tripeaks-board {
+
+    --tri-card-width:
+      42px;
+
+    --tri-card-height:
+      62px;
+
+    --tri-step:
+      35px;
+
+    width:
+      350px;
+
+    height:
+      320px;
+  }
+
+}
+
+
+/* =========================================================
+   LANDSCAPE / WIDE PHONE
+========================================================= */
+
+@media (
+  min-width: 701px
+) {
+
+  .tripeaks-board {
+
+    --tri-card-width:
+      62px;
+
+    --tri-card-height:
+      88px;
+
+    --tri-step:
+      54px;
+
+    width:
+      550px;
+
+    height:
+      430px;
+  }
+
+}
+
+</style>
+</head>
+
+
+<body>
+
+<div class="app">
+
+
+<!-- =======================================================
+     HEADER
+======================================================= -->
+
+<header class="header">
+
+  <div class="logo">
+    SOLITAIRE <span>♠</span>
+  </div>
+
+  <div class="stats">
+
+    <div class="stat">
+      <strong id="moves">0</strong>
+      Moves
+    </div>
+
+    <div class="stat">
+      <strong id="score">0</strong>
+      Score
+    </div>
+
+    <div class="stat">
+      <strong id="timer">0:00</strong>
+      Time
+    </div>
+
+  </div>
+
+</header>
+
+
+<!-- =======================================================
+     GAME MODES
+======================================================= -->
+
+<div class="modes">
+
+  <button
+    class="mode-btn active"
+    id="klondikeBtn"
+  >
+    Klondike
+  </button>
+
+  <button
+    class="mode-btn"
+    id="tripeaksBtn"
+  >
+    TriPeaks
+  </button>
+
+</div>
+
+
+<!-- =======================================================
+     BOARD
+======================================================= -->
+
+<main class="board">
+
+
+<!-- =======================================================
+     CONTROLS
+======================================================= -->
+
+<div class="toolbar">
+
+  <button
+    class="undo-button"
+    id="undoButton"
+  >
+    ↩ Undo
+  </button>
+
+  <button
+    class="draw-toggle"
+    id="drawToggle"
+  >
+    🃏 Draw 1
+  </button>
+
+  <button
+    class="hint-button"
+    id="hintButton"
+  >
+    💡 Hint
+  </button>
+
+  <button
+    class="new-game"
+    id="newGame"
+  >
+    ↻ New Game
+  </button>
+
+</div>
+
+
+<div id="game"></div>
+
+
+<div
+  class="message"
+  id="message"
+>
+  Select a card to begin.
+</div>
+
+
+</main>
+
+</div>
+
+
+<script>
+
+/* =========================================================
+   CARD DATA
+========================================================= */
+
+const SUITS = [
+  "♠",
+  "♥",
+  "♦",
+  "♣"
+];
+
+const RANKS = [
+  "A",
+  "2",
+  "3",
+  "4",
+  "5",
+  "6",
+  "7",
+  "8",
+  "9",
+  "10",
+  "J",
+  "Q",
+  "K"
+];
+
+
+/* =========================================================
+   STATE
+========================================================= */
+
+let mode =
+  "klondike";
+
+
+/* KLONDIKE */
+
+let tableau = [];
+
+let stock = [];
+
+let waste = [];
+
+let foundations = {
+  "♠": [],
+  "♥": [],
+  "♦": [],
+  "♣": []
+};
+
+
+/* TRIPEAKS */
+
+let triCards = [];
+
+let triStock = [];
+
+let triWaste = [];
+
+
+/* COMMON */
+
+let selectedCard =
+  null;
+
+let selectedSource =
+  null;
+
+let moves =
+  0;
+
+let score =
+  0;
+
+let seconds =
+  0;
+
+let timer =
+  null;
+
+let drawCount =
+  1;
+
+let history =
+  [];
+
+let hintCardId =
+  null;
+
+
+/* =========================================================
+   TRIPEAKS BLOCK MAP
+========================================================= */
+
+/*
+   0 - 2    TOP PEAKS
+   3 - 8    SECOND ROW
+   9 - 17   THIRD ROW
+   18 - 27  BOTTOM ROW
+*/
+
+const TRI_BLOCKERS = {
+
+  3: [9,10],
+  4: [10,11],
+
+  5: [12,13],
+  6: [13,14],
+
+  7: [15,16],
+  8: [16,17],
+
+  0: [3,4],
+  1: [5,6],
+  2: [7,8]
+};
+
+
+/*
+   Third row blocked by bottom row.
+*/
+
+for (
+  let i = 9;
+  i <= 17;
+  i++
+) {
+
+  TRI_BLOCKERS[i] = [
+    i + 9,
+    i + 10
+  ];
+
+}
+
+
+/* =========================================================
+   DOM
+========================================================= */
+
+const game =
+  document.getElementById(
+    "game"
+  );
+
+const message =
+  document.getElementById(
+    "message"
+  );
+
+const movesDisplay =
+  document.getElementById(
+    "moves"
+  );
+
+const scoreDisplay =
+  document.getElementById(
+    "score"
+  );
+
+const timerDisplay =
+  document.getElementById(
+    "timer"
+  );
+
+const klondikeBtn =
+  document.getElementById(
+    "klondikeBtn"
+  );
+
+const tripeaksBtn =
+  document.getElementById(
+    "tripeaksBtn"
+  );
+
+const undoBtn =
+  document.getElementById(
+    "undoButton"
+  );
+
+const drawToggle =
+  document.getElementById(
+    "drawToggle"
+  );
+
+const hintBtn =
+  document.getElementById(
+    "hintButton"
+  );
+
+const newGameBtn =
+  document.getElementById(
+    "newGame"
+  );
+
+
+/* =========================================================
+   CREATE DECK
+========================================================= */
+
+function createDeck() {
+
+  const deck = [];
+
+  for (
+    const suit of SUITS
+  ) {
+
+    for (
+      let i = 0;
+      i < 13;
+      i++
+    ) {
+
+      deck.push({
+
+        id:
+          crypto.randomUUID(),
+
+        suit,
+
+        rank:
+          RANKS[i],
+
+        value:
+          i + 1,
+
+        red:
+          suit === "♥" ||
+          suit === "♦",
+
+        faceUp:
+          false
+
+      });
+
+    }
+
+  }
+
+  return deck;
+}
+
+
+/* =========================================================
+   SHUFFLE
+========================================================= */
+
+function shuffle(deck) {
+
+  for (
+    let i =
+      deck.length - 1;
+
+    i > 0;
+
+    i--
+  ) {
+
+    const j =
+      Math.floor(
+        Math.random() *
+        (i + 1)
+      );
+
+    [
+      deck[i],
+      deck[j]
+    ] = [
+      deck[j],
+      deck[i]
+    ];
+
+  }
+
+  return deck;
+}
+
+
+/* =========================================================
+   TIMER
+========================================================= */
+
+function startTimer() {
+
+  clearInterval(timer);
+
+  seconds =
+    0;
+
+  timerDisplay.textContent =
+    "0:00";
+
+
+  timer =
+    setInterval(
+      () => {
+
+        seconds++;
+
+
+        const min =
+          Math.floor(
+            seconds / 60
+          );
+
+
+        const sec =
+          String(
+            seconds % 60
+          ).padStart(
+            2,
+            "0"
+          );
+
+
+        timerDisplay.textContent =
+          `${min}:${sec}`;
+
+      },
+      1000
+    );
+
+}
+
+
+/* =========================================================
+   STATS
+========================================================= */
+
+function updateStats() {
+
+  movesDisplay.textContent =
+    moves;
+
+  scoreDisplay.textContent =
+    score;
+
+  undoBtn.disabled =
+    history.length === 0;
+
+}
+
+
+/* =========================================================
+   CLEAR SELECTION
+========================================================= */
+
+function clearSelection() {
+
+  selectedCard =
+    null;
+
+  selectedSource =
+    null;
+
+}
+
+
+/* =========================================================
+   CLEAR HINT
+========================================================= */
+
+function clearHint() {
+
+  hintCardId =
+    null;
+
+}
+
+
+/* =========================================================
+   SAVE STATE
+========================================================= */
+
+function saveState() {
+
+  history.push({
+
+    tableau:
+      structuredClone(
+        tableau
+      ),
+
+    stock:
+      structuredClone(
+        stock
+      ),
+
+    waste:
+      structuredClone(
+        waste
+      ),
+
+    foundations:
+      structuredClone(
+        foundations
+      ),
+
+    triCards:
+      structuredClone(
+        triCards
+      ),
+
+    triStock:
+      structuredClone(
+        triStock
+      ),
+
+    triWaste:
+      structuredClone(
+        triWaste
+      ),
+
+    moves,
+
+    score
+
+  });
+
+
+  if (
+    history.length > 100
+  ) {
+
+    history.shift();
+
+  }
+
+}
+
+
+/* =========================================================
+   UNDO
+========================================================= */
+
+function undo() {
+
+  if (
+    history.length === 0
+  ) {
+
+    message.textContent =
+      "Nothing to undo.";
+
+    return;
+
+  }
+
+
+  const state =
+    history.pop();
+
+
+  tableau =
+    state.tableau;
+
+  stock =
+    state.stock;
+
+  waste =
+    state.waste;
+
+  foundations =
+    state.foundations;
+
+  triCards =
+    state.triCards;
+
+  triStock =
+    state.triStock;
+
+  triWaste =
+    state.triWaste;
+
+  moves =
+    state.moves;
+
+  score =
+    state.score;
+
+
+  clearSelection();
+
+  clearHint();
+
+
+  message.textContent =
+    "↩ Move undone.";
+
+
+  render();
+
+}
+
+
+/* =========================================================
+   CARD ELEMENT
+========================================================= */
+
+function cardElement(
+  card,
+  clickHandler
+) {
+
+  const el =
+    document.createElement(
+      "button"
+    );
+
+
+  el.type =
+    "button";
+
+
+  el.className =
+    "card";
+
+
+  if (
+    card.red
+  ) {
+
+    el.classList.add(
+      "red"
+    );
+
+  }
+
+
+  if (
+    card.faceUp === false
+  ) {
+
+    el.classList.add(
+      "back"
+    );
+
+  }
+
+  else {
+
+    el.innerHTML = `
+
+      <span class="rank">
+        ${card.rank}${card.suit}
+      </span>
+
+      <span class="center-suit">
+        ${card.suit}
+      </span>
+
+    `;
+
+  }
+
+
+  if (
+    card.id ===
+    selectedCard?.id
+  ) {
+
+    el.classList.add(
+      "selected"
+    );
+
+  }
+
+
+  if (
+    card.id ===
+    hintCardId
+  ) {
+
+    el.classList.add(
+      "hint-card"
+    );
+
+  }
+
+
+  if (
+    clickHandler
+  ) {
+
+    el.addEventListener(
+      "click",
+      event => {
+
+        event.stopPropagation();
+
+        clickHandler();
+
+      }
+    );
+
+  }
+
+
+  return el;
+}
+
+
+/* =========================================================
+   KLONDIKE START
+========================================================= */
+
+function startKlondike() {
+
+  mode =
+    "klondike";
+
+
+  let deck =
+    shuffle(
+      createDeck()
+    );
+
+
+  tableau =
+    Array.from(
+      {
+        length: 7
+      },
+      () => []
+    );
+
+
+  stock = [];
+
+  waste = [];
+
+
+  foundations = {
+
+    "♠": [],
+    "♥": [],
+    "♦": [],
+    "♣": []
+
+  };
+
+
+  history = [];
+
+  moves = 0;
+
+  score = 0;
+
+
+  clearSelection();
+
+  clearHint();
+
+
+  for (
+    let col = 0;
+    col < 7;
+    col++
+  ) {
+
+    for (
+      let row = 0;
+      row <= col;
+      row++
+    ) {
+
+      const card =
+        deck.pop();
+
+
+      card.faceUp =
+        row === col;
+
+
+      tableau[
+        col
+      ].push(
+        card
+      );
+
+    }
+
+  }
+
+
+  stock =
+    deck;
+
+
+  startTimer();
+
+
+  message.textContent =
+    "Select a card to begin.";
+
+
+  render();
+}
+
+
+/* =========================================================
+   KLONDIKE SOURCE
+========================================================= */
+
+function getSource(card) {
+
+  if (
+    waste.length &&
+    waste[
+      waste.length - 1
+    ].id ===
+    card.id
+  ) {
+
+    return {
+      type:
+        "waste"
+    };
+
+  }
+
+
+  for (
+    let col = 0;
+    col < 7;
+    col++
+  ) {
+
+    const index =
+      tableau[
+        col
+      ].findIndex(
+        c =>
+          c.id ===
+          card.id
+      );
+
+
+    if (
+      index !== -1
+    ) {
+
+      return {
+
+        type:
+          "tableau",
+
+        col,
+
+        index
+
+      };
+
+    }
+
+  }
+
+
+  for (
+    const suit of SUITS
+  ) {
+
+    const pile =
+      foundations[
+        suit
+      ];
+
+
+    if (
+      pile.length &&
+      pile[
+        pile.length - 1
+      ].id ===
+      card.id
+    ) {
+
+      return {
+
+        type:
+          "foundation",
+
+        suit
+
+      };
+
+    }
+
+  }
+
+
+  return null;
+}
+
+
+/* =========================================================
+   MOVING CARDS
+========================================================= */
+
+function movingCards() {
+
+  if (
+    !selectedSource
+  ) {
+
+    return [];
+  }
+
+
+  if (
+    selectedSource.type ===
+    "waste"
+  ) {
+
+    return waste.length
+      ? [
+          waste[
+            waste.length - 1
+          ]
+        ]
+      : [];
+
+  }
+
+
+  if (
+    selectedSource.type ===
+    "foundation"
+  ) {
+
+    const pile =
+      foundations[
+        selectedSource.suit
+      ];
+
+
+    return pile.length
+      ? [
+          pile[
+            pile.length - 1
+          ]
+        ]
+      : [];
+
+  }
+
+
+  return tableau[
+    selectedSource.col
+  ].slice(
+    selectedSource.index
+  );
+
+}
+
+
+/* =========================================================
+   VALID STACK
+========================================================= */
+
+function validStack(cards) {
+
+  if (
+    !cards.length
+  ) {
+
+    return false;
+  }
+
+
+  for (
+    const card of cards
+  ) {
+
+    if (
+      !card.faceUp
+    ) {
+
+      return false;
+    }
+
+  }
+
+
+  for (
+    let i = 0;
+    i < cards.length - 1;
+    i++
+  ) {
+
+    const a =
+      cards[i];
+
+    const b =
+      cards[i + 1];
+
+
+    if (
+      a.red ===
+      b.red
+    ) {
+
+      return false;
+    }
+
+
+    if (
+      a.value !==
+      b.value + 1
+    ) {
+
+      return false;
+    }
+
+  }
+
+
+  return true;
+}
+
+
+/* =========================================================
+   CAN PLACE
+========================================================= */
+
+function canPlace(
+  card,
+  target
+) {
+
+  if (
+    card.red ===
+    target.red
+  ) {
+
+    return false;
+  }
+
+
+  return (
+    card.value + 1 ===
+    target.value
+  );
+}
+
+
+/* =========================================================
+   FLIP EXPOSED KLONDIKE
+========================================================= */
+
+function flipExposed(
+  col
+) {
+
+  const pile =
+    tableau[
+      col
+    ];
+
+
+  if (
+    !pile.length
+  ) {
+
+    return;
+  }
+
+
+  const top =
+    pile[
+      pile.length - 1
+    ];
+
+
+  if (
+    !top.faceUp
+  ) {
+
+    top.faceUp =
+      true;
+
+    score +=
+      5;
+
+  }
+
+}
+
+
+/* =========================================================
+   REMOVE SELECTED
+========================================================= */
+
+function removeSelected() {
+
+  if (
+    selectedSource.type ===
+    "waste"
+  ) {
+
+    return waste.pop();
+
+  }
+
+
+  if (
+    selectedSource.type ===
+    "foundation"
+  ) {
+
+    return foundations[
+      selectedSource.suit
+    ].pop();
+
+  }
+
+
+  if (
+    selectedSource.type ===
+    "tableau"
+  ) {
+
+    const cards =
+      tableau[
+        selectedSource.col
+      ].splice(
+        selectedSource.index
+      );
+
+
+    flipExposed(
+      selectedSource.col
+    );
+
+
+    return cards;
+
+  }
+
+}
+
+
+/* =========================================================
+   KLONDIKE CARD CLICK
+========================================================= */
+
+function clickKlondikeCard(
+  card
+) {
+
+  clearHint();
+
+
+  if (
+    !selectedCard
+  ) {
+
+    selectedCard =
+      card;
+
+    selectedSource =
+      getSource(
+        card
+      );
+
+
+    message.textContent =
+      "Tap where you want to move it.";
+
+
+    render();
+
+    return;
+
+  }
+
+
+  if (
+    selectedCard.id ===
+    card.id
+  ) {
+
+    clearSelection();
+
+    message.textContent =
+      "Select a card to begin.";
+
+    render();
+
+    return;
+  }
+
+
+  const targetSource =
+    getSource(
+      card
+    );
+
+
+  if (
+    targetSource?.type !==
+    "tableau"
+  ) {
+
+    clearSelection();
+
+    message.textContent =
+      "That isn't a valid destination.";
+
+    render();
+
+    return;
+
+  }
+
+
+  const cards =
+    movingCards();
+
+
+  if (
+    !validStack(
+      cards
+    )
+  ) {
+
+    clearSelection();
+
+    message.textContent =
+      "That stack cannot move.";
+
+    render();
+
+    return;
+  }
+
+
+  if (
+    !canPlace(
+      cards[0],
+      card
+    )
+  ) {
+
+    clearSelection();
+
+    message.textContent =
+      "That card cannot go there.";
+
+    render();
+
+    return;
+  }
+
+
+  saveState();
+
+
+  const removed =
+    removeSelected();
+
+
+  const moving =
+    Array.isArray(
+      removed
+    )
+      ? removed
+      : [removed];
+
+
+  tableau[
+    targetSource.col
+  ].push(
+    ...moving
+  );
+
+
+  moves++;
+
+  score +=
+    5;
+
+
+  clearSelection();
+
+
+  message.textContent =
+    "Nice move!";
+
+
+  render();
+}
+
+
+/* =========================================================
+   EMPTY KLONDIKE COLUMN
+========================================================= */
+
+function clickEmptyColumn(
+  col
+) {
+
+  if (
+    !selectedCard
+  ) {
+
+    return;
+  }
+
+
+  const cards =
+    movingCards();
+
+
+  if (
+    !cards.length
+  ) {
+
+    return;
+  }
+
+
+  if (
+    cards[0].value !==
+    13
+  ) {
+
+    clearSelection();
+
+    message.textContent =
+      "Only a King can move into an empty column.";
+
+    render();
+
+    return;
+  }
+
+
+  if (
+    !validStack(
+      cards
+    )
+  ) {
+
+    clearSelection();
+
+    render();
+
+    return;
+  }
+
+
+  saveState();
+
+
+  const removed =
+    removeSelected();
+
+
+  const moving =
+    Array.isArray(
+      removed
+    )
+      ? removed
+      : [removed];
+
+
+  tableau[
+    col
+  ].push(
+    ...moving
+  );
+
+
+  moves++;
+
+  score +=
+    5;
+
+
+  clearSelection();
+
+
+  message.textContent =
+    "King moved!";
+
+
+  render();
+}
+
+
+/* =========================================================
+   FOUNDATION
+========================================================= */
+
+function clickFoundation(
+  suit
+) {
+
+  if (
+    !selectedCard
+  ) {
+
+    return;
+  }
+
+
+  const cards =
+    movingCards();
+
+
+  if (
+    cards.length !== 1
+  ) {
+
+    clearSelection();
+
+    message.textContent =
+      "Only one card can go to the foundation.";
+
+    render();
+
+    return;
+  }
+
+
+  const card =
+    cards[0];
+
+
+  if (
+    card.suit !==
+    suit
+  ) {
+
+    clearSelection();
+
+    message.textContent =
+      "That card belongs to another foundation.";
+
+    render();
+
+    return;
+  }
+
+
+  const pile =
+    foundations[
+      suit
+    ];
+
+
+  if (
+    pile.length === 0
+  ) {
+
+    if (
+      card.value !== 1
+    ) {
+
+      clearSelection();
+
+      message.textContent =
+        "The foundation starts with an Ace.";
+
+      render();
+
+      return;
+    }
+
+  }
+
+  else {
+
+    const top =
+      pile[
+        pile.length - 1
+      ];
+
+
+    if (
+      card.value !==
+      top.value + 1
+    ) {
+
+      clearSelection();
+
+      message.textContent =
+        "Build the foundation upward.";
+
+      render();
+
+      return;
+    }
+
+  }
+
+
+  saveState();
+
+
+  const removed =
+    removeSelected();
+
+
+  pile.push(
+    Array.isArray(
+      removed
+    )
+      ? removed[0]
+      : removed
+  );
+
+
+  moves++;
+
+  score +=
+    10;
+
+
+  clearSelection();
+
+
+  message.textContent =
+    `${card.rank}${card.suit} moved to the foundation.`;
+
+
+  render();
+}
+
+
+/* =========================================================
+   DRAW KLONDIKE
+========================================================= */
+
+function drawKlondike() {
+
+  clearSelection();
+
+  clearHint();
+
+
+  if (
+    stock.length === 0
+  ) {
+
+    if (
+      !waste.length
+    ) {
+
+      message.textContent =
+        "The deck is empty.";
+
+      return;
+    }
+
+
+    saveState();
+
+
+    stock =
+      waste
+        .slice()
+        .reverse();
+
+
+    waste = [];
+
+
+    stock.forEach(
+      card => {
+
+        card.faceUp =
+          false;
+
+      }
+    );
+
+
+    moves++;
+
+
+    message.textContent =
+      "↻ Deck recycled.";
+
+
+    render();
+
+    return;
+  }
+
+
+  saveState();
+
+
+  const amount =
+    Math.min(
+      drawCount,
+      stock.length
+    );
+
+
+  for (
+    let i = 0;
+    i < amount;
+    i++
+  ) {
+
+    const card =
+      stock.pop();
+
+
+    card.faceUp =
+      true;
+
+
+    waste.push(
+      card
+    );
+
+  }
+
+
+  moves++;
+
+
+  message.textContent =
+    drawCount === 1
+      ? "Card drawn."
+      : `${amount} cards drawn.`;
+
+
+  render();
+}
+
+
+/* =========================================================
+   RENDER KLONDIKE
+========================================================= */
+
+function renderKlondike() {
+
+  game.innerHTML =
+    "";
+
+
+  const top =
+    document.createElement(
+      "div"
+    );
+
+
+  top.className =
+    "klondike-top";
+
+
+  /* STOCK */
+
+  const stockSlot =
+    document.createElement(
+      "div"
+    );
+
+
+  stockSlot.className =
+    "slot";
+
+
+  stockSlot.addEventListener(
+    "click",
+    drawKlondike
+  );
+
+
+  if (
+    stock.length
+  ) {
+
+    const back =
+      cardElement({
+        id:
+          "stock",
+
+        faceUp:
+          false
+      });
+
+
+    back.style.pointerEvents =
+      "none";
+
+
+    stockSlot.appendChild(
+      back
+    );
+
+  }
+
+  else {
+
+    stockSlot.textContent =
+      waste.length
+        ? "↻"
+        : "";
+  }
+
+
+  top.appendChild(
+    stockSlot
+  );
+
+
+  /* WASTE */
+
+  const wasteSlot =
+    document.createElement(
+      "div"
+    );
+
+
+  wasteSlot.className =
+    "waste-slot";
+
+
+  if (
+    waste.length
+  ) {
+
+    const card =
+      waste[
+        waste.length - 1
+      ];
+
+
+    const el =
+      cardElement(
+        card,
+        () =>
+          clickKlondikeCard(
+            card
+          )
+      );
+
+
+    el.classList.add(
+      "waste-card"
+    );
+
+
+    wasteSlot.appendChild(
+      el
+    );
+
+  }
+
+
+  top.appendChild(
+    wasteSlot
+  );
+
+
+  /* FOUNDATIONS */
+
+  SUITS.forEach(
+    suit => {
+
+      const slot =
+        document.createElement(
+          "div"
+        );
+
+
+      slot.className =
+        "slot";
+
+
+      const pile =
+        foundations[
+          suit
+        ];
+
+
+      if (
+        pile.length
+      ) {
+
+        const topCard =
+          pile[
+            pile.length - 1
+          ];
+
+
+        const el =
+          cardElement(
+            topCard,
+            () => {
+
+              if (
+                !selectedCard
+              ) {
+
+                selectedCard =
+                  topCard;
+
+                selectedSource = {
+
+                  type:
+                    "foundation",
+
+                  suit
+
+                };
+
+
+                message.textContent =
+                  "Tap a tableau card or empty column to move it back down.";
+
+
+                render();
+
+                return;
+              }
+
+
+              clickFoundation(
+                suit
+              );
+
+            }
+          );
+
+
+        slot.appendChild(
+          el
+        );
+
+      }
+
+      else {
+
+        slot.textContent =
+          suit;
+
+
+        slot.addEventListener(
+          "click",
+          () =>
+            clickFoundation(
+              suit
+            )
+        );
+
+      }
+
+
+      top.appendChild(
+        slot
+      );
+
+    }
+  );
+
+
+  game.appendChild(
+    top
+  );
+
+
+  /* TABLEAU */
+
+  const tableauEl =
+    document.createElement(
+      "div"
+    );
+
+
+  tableauEl.className =
+    "tableau";
+
+
+  tableau.forEach(
+    (column, col) => {
+
+      const colEl =
+        document.createElement(
+          "div"
+        );
+
+
+      colEl.className =
+        "tableau-column";
+
+
+      if (
+        column.length === 0
+      ) {
+
+        const empty =
+          document.createElement(
+            "div"
+          );
+
+
+        empty.className =
+          "slot";
+
+
+        empty.textContent =
+          "K";
+
+
+        empty.addEventListener(
+          "click",
+          () =>
+            clickEmptyColumn(
+              col
+            )
+        );
+
+
+        colEl.appendChild(
+          empty
+        );
+
+      }
+
+
+      column.forEach(
+        (card, index) => {
+
+          const wrapper =
+            document.createElement(
+              "div"
+            );
+
+
+          wrapper.className =
+            "tableau-card";
+
+
+          const isTop =
+            index ===
+            column.length - 1;
+
+
+          const el =
+            cardElement(
+              card,
+              card.faceUp
+                ? () =>
+                    clickKlondikeCard(
+                      card
+                    )
+                : isTop
+                  ? () =>
+                      flipKlondikeCard(
+                        card,
+                        col
+                      )
+                  : null
+            );
+
+
+          wrapper.appendChild(
+            el
+          );
+
+
+          colEl.appendChild(
+            wrapper
+          );
+
+        }
+      );
+
+
+      tableauEl.appendChild(
+        colEl
+      );
+
+    }
+  );
+
+
+  game.appendChild(
+    tableauEl
+  );
+}
+
+
+/* =========================================================
+   FLIP KLONDIKE
+========================================================= */
+
+function flipKlondikeCard(
+  card,
+  col
+) {
+
+  const pile =
+    tableau[
+      col
+    ];
+
+
+  if (
+    pile[
+      pile.length - 1
+    ].id !==
+    card.id
+  ) {
+
+    message.textContent =
+      "That card is still covered.";
+
+    return;
+  }
+
+
+  saveState();
+
+
+  card.faceUp =
+    true;
+
+
+  moves++;
+
+  score +=
+    5;
+
+
+  message.textContent =
+    "Card uncovered!";
+
+
+  render();
+}
+
+
+/* =========================================================
+   =========================================================
+   TRIPEAKS
+   =========================================================
+========================================================= */
+
+
+/* ---------------------------------------------------------
+   IS CARD PLAYABLE?
+--------------------------------------------------------- */
+
+function triPlayable(
+  index
+) {
+
+  const card =
+    triCards[
+      index
+    ];
+
+
+  if (
+    !card
+  ) {
+
+    return false;
+  }
+
+
+  if (
+    !card.faceUp
+  ) {
+
+    return false;
+  }
+
+
+  const blockers =
+    TRI_BLOCKERS[
+      index
+    ];
+
+
+  if (
+    !blockers
+  ) {
+
+    return true;
+  }
+
+
+  /*
+     A card becomes playable ONLY when
+     both cards covering it are gone.
+  */
+
+  return blockers.every(
+    blocker =>
+      !triCards[
+        blocker
+      ]
+  );
+}
+
+
+/* ---------------------------------------------------------
+   REVEAL CARDS
+--------------------------------------------------------- */
+
+function revealTriCards() {
+
+  let changed =
+    true;
+
+
+  while (
+    changed
+  ) {
+
+    changed =
+      false;
+
+
+    for (
+      let i = 0;
+      i < 28;
+      i++
+    ) {
+
+      const card =
+        triCards[
+          i
+        ];
+
+
+      if (
+        !card ||
+        card.faceUp
+      ) {
+
+        continue;
+      }
+
+
+      if (
+        triPlayable(
+          i
+        )
+      ) {
+
+        card.faceUp =
+          true;
+
+        changed =
+          true;
+      }
+
+    }
+
+  }
+}
+
+
+/* ---------------------------------------------------------
+   START TRIPEAKS
+--------------------------------------------------------- */
+
+function startTriPeaks() {
+
+  mode =
+    "tripeaks";
+
+
+  let deck =
+    shuffle(
+      createDeck()
+    );
+
+
+  triCards =
+    [];
+
+
+  /*
+     EXACTLY 28 TABLEAU CARDS
+  */
+
+  for (
+    let i = 0;
+    i < 28;
+    i++
+  ) {
+
+    const card =
+      deck.pop();
+
+
+    /*
+       Only bottom row starts
+       face up.
+    */
+
+    card.faceUp =
+      i >= 18;
+
+
+    triCards.push(
+      card
+    );
+
+  }
+
+
+  /*
+     Remaining 24 cards.
+
+     One becomes the starting waste.
+
+     23 remain in stock.
+  */
+
+  triStock =
+    deck;
+
+
+  triWaste =
+    [];
+
+
+  const first =
+    triStock.pop();
+
+
+  first.faceUp =
+    true;
+
+
+  triWaste.push(
+    first
+  );
+
+
+  /*
+     Make sure all upper cards
+     begin face down.
+  */
+
+  for (
+    let i = 0;
+    i < 18;
+    i++
+  ) {
+
+    triCards[
+      i
+    ].faceUp =
+      false;
+
+  }
+
+
+  history = [];
+
+  moves = 0;
+
+  score = 0;
+
+
+  clearSelection();
+
+  clearHint();
+
+
+  startTimer();
+
+
+  message.textContent =
+    "Play a card one rank above or below the waste.";
+
+
+  render();
+}
+
+
+/* ---------------------------------------------------------
+   RANK MATCH
+--------------------------------------------------------- */
+
+function triRankMatch(
+  card,
+  wasteCard
+) {
+
+  if (
+    !card ||
+    !wasteCard
+  ) {
+
+    return false;
+  }
+
+
+  const difference =
+    Math.abs(
+      card.value -
+      wasteCard.value
+    );
+
+
+  if (
+    difference === 1
+  ) {
+
+    return true;
+  }
+
+
+  /*
+     A ↔ K wrap.
+  */
+
+  if (
+    (
+      card.value === 1 &&
+      wasteCard.value === 13
+    ) ||
+    (
+      card.value === 13 &&
+      wasteCard.value === 1
+    )
+  ) {
+
+    return true;
+  }
+
+
+  return false;
+}
+
+
+/* ---------------------------------------------------------
+   PLAY TRIPEAKS CARD
+--------------------------------------------------------- */
+
+function playTriCard(
+  index
+) {
+
+  const card =
+    triCards[
+      index
+    ];
+
+
+  if (
+    !card
+  ) {
+
+    return;
+  }
+
+
+  /*
+     Blocked card.
+  */
+
+  if (
+    !triPlayable(
+      index
+    )
+  ) {
+
+    message.textContent =
+      "That card is still blocked.";
+
+    return;
+  }
+
+
+  const top =
+    triWaste[
+      triWaste.length - 1
+    ];
+
+
+  /*
+     Rank must be adjacent.
+  */
+
+  if (
+    !triRankMatch(
+      card,
+      top
+    )
+  ) {
+
+    message.textContent =
+      "You need a card one rank above or below the waste.";
+
+    return;
+  }
+
+
+  saveState();
+
+
+  /*
+     Remove card from the actual
+     TriPeaks board.
+  */
+
+  triCards[
+    index
+  ] =
+    null;
+
+
+  /*
+     Move card to waste.
+  */
+
+  triWaste.push(
+    card
+  );
+
+
+  moves++;
+
+  score +=
+    10;
+
+
+  /*
+     IMPORTANT:
+
+     Newly uncovered cards turn over
+     immediately.
+  */
+
+  revealTriCards();
+
+
+  message.textContent =
+    "Nice! Keep the streak going.";
+
+
+  render();
+
+
+  /*
+     WIN
+  */
+
+  if (
+    triCards.every(
+      card =>
+        card === null
+    )
+  ) {
+
+    clearInterval(
+      timer
+    );
+
+
+    score +=
+      100;
+
+
+    message.textContent =
+      "🎉 YOU CLEARED ALL THREE PEAKS! 🎉";
+
+
+    render();
+  }
+
+}
+
+
+/* ---------------------------------------------------------
+   DRAW TRIPEAKS
+--------------------------------------------------------- */
+
+function drawTriCard() {
+
+  clearSelection();
+
+  clearHint();
+
+
+  if (
+    triStock.length === 0
+  ) {
+
+    message.textContent =
+      "No cards left in the draw pile.";
+
+    return;
+  }
+
+
+  saveState();
+
+
+  const card =
+    triStock.pop();
+
+
+  card.faceUp =
+    true;
+
+
+  triWaste.push(
+    card
+  );
+
+
+  moves++;
+
+
+  message.textContent =
+    "New waste card.";
+
+
+  render();
+}
+
+
+/* ---------------------------------------------------------
+   TRIPEAKS CARD ELEMENT
+--------------------------------------------------------- */
+
+function triCardElement(
+  card,
+  index
+) {
+
+  const el =
+    cardElement(
+      card,
+      () =>
+        playTriCard(
+          index
+        )
+    );
+
+
+  el.classList.add(
+    "tri-card"
+  );
+
+
+  /*
+     Assign physical position.
+  */
+
+  if (
+    index <= 2
+  ) {
+
+    el.classList.add(
+      `tri-r1-${index}`
+    );
+
+  }
+
+  else if (
+    index <= 8
+  ) {
+
+    el.classList.add(
+      `tri-r2-${index - 3}`
+    );
+
+  }
+
+  else if (
+    index <= 17
+  ) {
+
+    el.classList.add(
+      `tri-r3-${index - 9}`
+    );
+
+  }
+
+  else {
+
+    el.classList.add(
+      `tri-r4-${index - 18}`
+    );
+
+  }
+
+
+  /*
+     Covered cards cannot receive taps.
+  */
+
+  if (
+    !triPlayable(
+      index
+    )
+  ) {
+
+    el.classList.add(
+      "blocked"
+    );
+
+    el.style.pointerEvents =
+      "none";
+  }
+
+
+  return el;
+}
+
+
+/* ---------------------------------------------------------
+   RENDER TRIPEAKS
+--------------------------------------------------------- */
+
+function renderTriPeaks() {
+
+  game.innerHTML =
+    "";
+
+
+  const wrap =
+    document.createElement(
+      "div"
+    );
+
+
+  wrap.className =
+    "tripeaks-wrap";
+
+
+  /*
+     BOARD
+  */
+
+  const board =
+    document.createElement(
+      "div"
+    );
+
+
+  board.className =
+    "tripeaks-board";
+
+
+  /*
+     Only existing cards are rendered.
+
+     Removed cards leave empty space,
+     which is what we want.
+  */
+
+  triCards.forEach(
+    (card, index) => {
+
+      if (
+        !card
+      ) {
+
+        return;
+      }
+
+
+      board.appendChild(
+        triCardElement(
+          card,
+          index
+        )
+      );
+
+    }
+  );
+
+
+  wrap.appendChild(
+    board
+  );
+
+
+  /*
+     WASTE + STOCK
+  */
+
+  const piles =
+    document.createElement(
+      "div"
+    );
+
+
+  piles.className =
+    "tri-piles";
+
+
+  /*
+     WASTE
+  */
+
+  const wastePile =
+    document.createElement(
+      "div"
+    );
+
+
+  wastePile.className =
+    "tri-pile";
+
+
+  if (
+    triWaste.length
+  ) {
+
+    const wasteCard =
+      triWaste[
+        triWaste.length - 1
+      ];
+
+
+    wastePile.appendChild(
+      cardElement(
+        wasteCard
+      )
+    );
+
+  }
+
+
+  /*
+     STOCK
+  */
+
+  const stockPile =
+    document.createElement(
+      "div"
+    );
+
+
+  stockPile.className =
+    "tri-pile";
+
+
+  if (
+    triStock.length
+  ) {
+
+    const back =
+      cardElement(
+        {
+          id:
+            "tri-stock",
+
+          faceUp:
+            false
+        },
+
+        drawTriCard
+      );
+
+
+    stockPile.appendChild(
+      back
+    );
+
+  }
+
+  else {
+
+    stockPile.textContent =
+      "—";
+  }
+
+
+  piles.appendChild(
+    wastePile
+  );
+
+  piles.appendChild(
+    stockPile
+  );
+
+
+  wrap.appendChild(
+    piles
+  );
+
+
+  game.appendChild(
+    wrap
+  );
+}
+
+
+/* =========================================================
+   HINT
+========================================================= */
+
+function showHint() {
+
+  clearHint();
+
+
+  if (
+    mode ===
+    "tripeaks"
+  ) {
+
+    const top =
+      triWaste[
+        triWaste.length - 1
+      ];
+
+
+    for (
+      let i = 0;
+      i < 28;
+      i++
+    ) {
+
+      const card =
+        triCards[
+          i
+        ];
+
+
+      if (
+        card &&
+        triPlayable(i) &&
+        triRankMatch(
+          card,
+          top
+        )
+      ) {
+
+        hintCardId =
+          card.id;
+
+
+        message.textContent =
+          `💡 Try ${card.rank}${card.suit}.`;
+
+
+        render();
+
+        return;
+      }
+
+    }
+
+
+    message.textContent =
+      "💡 No playable card. Try the draw pile.";
+
+    return;
+  }
+
+
+  /*
+     KLONDIKE HINT
+  */
+
+  for (
+    let col = 0;
+    col < 7;
+    col++
+  ) {
+
+    const pile =
+      tableau[
+        col
+      ];
+
+
+    if (
+      !pile.length
+    ) {
+
+      continue;
+    }
+
+
+    const card =
+      pile[
+        pile.length - 1
+      ];
+
+
+    if (
+      !card.faceUp
+    ) {
+
+      continue;
+    }
+
+
+    const foundation =
+      foundations[
+        card.suit
+      ];
+
+
+    if (
+      (
+        foundation.length === 0 &&
+        card.value === 1
+      ) ||
+      (
+        foundation.length &&
+        card.value ===
+        foundation[
+          foundation.length - 1
+        ].value + 1
+      )
+    ) {
+
+      hintCardId =
+        card.id;
+
+
+      message.textContent =
+        `💡 Try moving ${card.rank}${card.suit} to the foundation.`;
+
+
+      render();
+
+      return;
+    }
+
+  }
+
+
+  message.textContent =
+    "🤔 I don't see an obvious move.";
+}
+
+
+/* =========================================================
+   MODE SWITCH
+========================================================= */
+
+klondikeBtn.addEventListener(
+  "click",
+  () => {
+
+    klondikeBtn.classList.add(
+      "active"
+    );
+
+    tripeaksBtn.classList.remove(
+      "active"
+    );
+
+
+    undoBtn.style.display =
+      "block";
+
+    drawToggle.style.display =
+      "block";
+
+
+    startKlondike();
+  }
+);
+
+
+tripeaksBtn.addEventListener(
+  "click",
+  () => {
+
+    klondikeBtn.classList.remove(
+      "active"
+    );
+
+    tripeaksBtn.classList.add(
+      "active"
+    );
+
+
+    undoBtn.style.display =
+      "block";
+
+    /*
+       Draw 1 / Draw 3 does not belong
+       to TriPeaks.
+    */
+
+    drawToggle.style.display =
+      "none";
+
+
+    startTriPeaks();
+  }
+);
+
+
+/* =========================================================
+   NEW GAME
+========================================================= */
+
+newGameBtn.addEventListener(
+  "click",
+  () => {
+
+    if (
+      mode ===
+      "klondike"
+    ) {
+
+      startKlondike();
+
+    }
+
+    else {
+
+      startTriPeaks();
+
+    }
+
+  }
+);
+
+
+/* =========================================================
+   UNDO
+========================================================= */
+
+undoBtn.addEventListener(
+  "click",
+  undo
+);
+
+
+/* =========================================================
+   HINT
+========================================================= */
+
+hintBtn.addEventListener(
+  "click",
+  showHint
+);
+
+
+/* =========================================================
+   DRAW 1 / DRAW 3
+========================================================= */
+
+drawToggle.addEventListener(
+  "click",
+  () => {
+
+    drawCount =
+      drawCount === 1
+        ? 3
+        : 1;
+
+
+    drawToggle.textContent =
+      drawCount === 1
+        ? "🃏 Draw 1"
+        : "🃏 Draw 3";
+
+
+    message.textContent =
+      drawCount === 1
+        ? "Draw 1 mode."
+        : "Draw 3 mode.";
+  }
+);
+
+
+/* =========================================================
+   RENDER
+========================================================= */
+
+function render() {
+
+  if (
+    mode ===
+    "klondike"
+  ) {
+
+    renderKlondike();
+
+  }
+
+  else {
+
+    renderTriPeaks();
+
+  }
+
+
+  updateStats();
+}
+
+
+/* =========================================================
+   START
+========================================================= */
+
+startKlondike();
+
+</script>
+
+</body>
+</html>
